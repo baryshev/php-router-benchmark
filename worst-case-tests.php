@@ -31,6 +31,7 @@ function setupBenchmark($numIterations, $numRoutes, $numArgs)
     setupSymfony2($benchmark, $numRoutes, $numArgs);
     setupSymfony2Optimized($benchmark, $numRoutes, $numArgs);
     setupPux($benchmark, $numRoutes, $numArgs);
+    setupTreeRoute($benchmark, $numRoutes, $numArgs);
 
     return $benchmark;
 }
@@ -43,6 +44,36 @@ function getRandomParts()
         substr($rand, 0, 10),
         substr($rand, -10),
     );
+}
+
+/**
+ * Sets up TreeRoute tests
+ */
+function setupTreeRoute(Benchmark $benchmark, $routes, $args)
+{
+    $argString = implode('/', array_map(function ($i) { return "{arg$i}"; }, range(1, $args)));
+    $str = $firstStr = $lastStr = '';
+    $router = new \TreeRoute\Router();
+
+        for ($i = 0; $i < $routes; $i++) {
+            list ($pre, $post) = getRandomParts();
+            $str = '/' . $pre . '/' . $argString . '/' . $post;
+
+            if (0 === $i) {
+                $firstStr = str_replace(array('{', '}'), '', $str);
+            }
+            $lastStr = str_replace(array('{', '}'), '', $str);
+
+            $router->addRoute('GET', $str, 'handler' . $i);
+        }
+
+    $benchmark->register(sprintf('TreeRoute - last route (%s routes)', $routes), function () use ($router, $lastStr) {
+            $route = $router->dispatch('GET', $lastStr);
+        });
+
+    $benchmark->register(sprintf('TreeRoute - unknown route (%s routes)', $routes), function () use ($router) {
+            $route = $router->dispatch('GET', '/not-even-real');
+        });
 }
 
 /**
