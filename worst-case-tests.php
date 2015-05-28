@@ -133,7 +133,7 @@ function setupPux(Benchmark $benchmark, $routes, $args)
         });
 
     $benchmark->register(sprintf('%s - unknown route (%s routes)', $name, $routes), function () use ($router) {
-            $route = $router->match('GET', '/not-even-real');
+            $route = $router->match('/not-even-real');
         });
 }
 
